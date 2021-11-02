@@ -83,11 +83,93 @@ class Encrypt {
     static columnar_doble(text, key) {
 
         let size = key.length;
-        const table = {};
-        const arr = [];
 
+        while(text.length % size != 0)
+            text += 'X'; 
+
+        const arr1 = this.#fill_columnar_table(text, size);
+
+        let newtext = "";
+        for(let i = 0; i < arr1[0].length; ++i)
+            for(let j = 0; j < arr1.length; ++j)
+                newtext += arr1[j][i];
         
+        const arr2 = this.#fill_columnar_table(newtext, size);
+        const keySorted = this.#order_key(key);
+       
+        let cyphertext = "";
+        
+        for(let i = 0; i < keySorted.length; ++i) {
 
+            for(let j = 0; j < arr2.length; ++j) {
+                cyphertext += arr2[j][keySorted[i][0]];
+            }
+        }
+            
+        return cyphertext;
+    }
+
+    static decrypt_columnar(text, key) {
+        let size = text.length / key.length;
+        const keySorted = this.#order_key(key);
+        const arr = this.#fill_columnar_table(text, size);
+        const obj = {};
+
+        for(let i = 0; i < keySorted.length; ++i) {
+            obj[keySorted[i][0]] = arr[i]; 
+        }
+
+        const arr1 = Object.values(obj);
+
+        let newtext = "";
+        for(let i = 0; i < arr1[0].length; ++i)
+            for(let j = 0; j < arr1.length; ++j)
+                newtext += arr1[j][i];
+            
+        const arr2 = this.#fill_columnar_table(newtext, size);
+        
+        let decrypttext = "";
+        for(let i = 0; i < arr2[0].length; ++i)
+            for(let j = 0; j < arr2.length; ++j)
+                decrypttext += arr2[j][i];
+            
+        return decrypttext;
+    }
+
+    static #order_key(key) {
+        let arrk = key.split('');
+        const table = {};
+        this.#fill_vignere_table(table, 0);
+        let keyParser = {}
+
+        for(let i = 0; i < key.length; ++i)
+            keyParser[i] = parseInt(table[key[i]]);
+        
+        var sortable = [];
+        for (var k in keyParser) {
+            sortable.push([k, keyParser[k]]);
+        }
+        
+        sortable.sort(function(a, b) {
+            return a[1] - b[1];
+        });
+
+        return sortable;
+    }
+
+    static #fill_columnar_table(text, ksize) {
+        const arr = [];
+        var temp = [];
+        for(let i = 1; i <= text.length; ++i) {
+            if(i % ksize == 0 || i == text.length) {
+                temp.push(text[i - 1]);
+                arr.push(temp);
+                temp = [];
+            
+            } else 
+                temp.push(text[i - 1]);
+        }
+        return arr;
     }
 
     static preprocessing_mod27(text) {
